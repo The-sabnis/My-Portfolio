@@ -62,21 +62,65 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--p); border-radius: 4px; }
 
 /* ── CURSOR ── */
-#cur {
-  position: fixed; width: 6px; height: 6px; border-radius: 50%;
-  background: var(--p-light); pointer-events: none; z-index: 9999;
+#cur-wrap { pointer-events: none; }
+
+#cur-outer {
+  position: fixed; z-index: 9996;
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid rgba(124,107,255,0.45);
   transform: translate(-50%,-50%);
-  transition: width .12s, height .12s, background .2s;
+  pointer-events: none;
+  transition: width .25s ease, height .25s ease,
+              border-color .25s, background .25s, border-radius .25s;
 }
-#cur-ring {
-  position: fixed; width: 30px; height: 30px; border-radius: 50%;
-  border: 1px solid rgba(124,107,255,.45); pointer-events: none; z-index: 9998;
+#cur-inner {
+  position: fixed; z-index: 9999;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--p-light);
   transform: translate(-50%,-50%);
-  transition: width .22s, height .22s, border-color .2s;
+  pointer-events: none;
+  transition: width .15s, height .15s, background .2s;
+  box-shadow: 0 0 6px var(--p-glow);
 }
-body:has(a:hover) #cur { width:14px; height:14px; background:var(--c); }
-body:has(a:hover) #cur-ring { width:46px; height:46px; border-color:var(--c); }
-body:has(.btn:hover) #cur { width:14px; height:14px; background:var(--a); }
+#cur-trail {
+  position: fixed; z-index: 9994;
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 1px solid rgba(124,107,255,0.1);
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+  transition: width .4s ease, height .4s ease;
+}
+
+/* Hover — links */
+body:has(a:hover) #cur-outer {
+  width: 42px; height: 42px;
+  border-color: rgba(34,211,200,0.6);
+  background: rgba(34,211,200,0.04);
+}
+body:has(a:hover) #cur-inner {
+  width: 4px; height: 4px;
+  background: var(--c);
+  box-shadow: 0 0 8px rgba(34,211,200,0.7);
+}
+
+/* Hover — buttons */
+body:has(.btn:hover) #cur-outer {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  border-color: rgba(245,158,11,0.55);
+  background: rgba(245,158,11,0.04);
+}
+body:has(.btn:hover) #cur-inner {
+  background: var(--a);
+  box-shadow: 0 0 8px rgba(245,158,11,0.6);
+}
+
+/* Click */
+#cur-outer.clicked {
+  width: 22px; height: 22px;
+  background: rgba(124,107,255,0.18);
+  transition: width .08s, height .08s, background .08s;
+}
 
 /* ── LOADER ── */
 #loader {
@@ -379,71 +423,486 @@ h2 .dim { color: var(--t3); }
    EXPERIENCE TIMELINE
 ══════════════════════ */
 #experience { background: var(--s1); }
-.tl { display: flex; flex-direction: column; gap: 0; }
+
+.tl {
+  display: flex; flex-direction: column;
+  gap: 0; position: relative;
+  max-width: 760px;
+}
+
 .tl-item {
-  display: grid; grid-template-columns: 180px 40px 1fr;
-  gap: 0; align-items: stretch; min-height: 180px;
+  display: flex; gap: 0;
+  opacity: 0; transform: translateY(18px);
+  transition: opacity .55s ease, transform .55s ease;
 }
-.tl-left {
-  padding: 0 24px 48px 0; text-align: right;
-  display: flex; flex-direction: column; justify-content: flex-start; padding-top: 4px;
+.tl-item.on { opacity: 1; transform: translateY(0); }
+
+/* ── Stepper column ── */
+.tl-step {
+  display: flex; flex-direction: column;
+  align-items: center; width: 48px; flex-shrink: 0;
 }
-.tl-date {
+.tl-step-num {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px; color: var(--p); letter-spacing: .06em;
-  font-weight: 500; margin-bottom: 4px;
+  font-size: 12px; font-weight: 700; letter-spacing: .04em;
+  border: 1.5px solid var(--border2); background: var(--card);
+  color: var(--t2); transition: all .3s; position: relative; z-index: 2;
 }
-.tl-company { font-size: 12px; color: var(--t3); font-weight: 600; }
-.tl-center { display: flex; flex-direction: column; align-items: center; }
-.tl-dot {
-  width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
-  background: var(--s1); border: 2px solid var(--border2);
-  margin-top: 6px; position: relative; z-index: 1; transition: border-color .3s;
+.tl-item.on .tl-step-num {
+  border-color: var(--p); color: var(--p-light);
+  background: var(--p-soft); box-shadow: 0 0 14px var(--p-glow);
 }
-.tl-dot-active {
-  background: var(--p); border-color: var(--p);
-  box-shadow: 0 0 0 4px var(--p-soft), 0 0 16px var(--p-glow);
-  animation: dotpulse 2.5s ease-in-out infinite;
+.tl-item:first-child .tl-step-num {
+  border-color: var(--c); color: var(--c);
+  background: var(--c-soft); box-shadow: 0 0 14px rgba(34,211,200,.25);
 }
-@keyframes dotpulse {
-  0%,100% { box-shadow: 0 0 0 4px var(--p-soft), 0 0 10px var(--p-glow); }
-  50%      { box-shadow: 0 0 0 8px rgba(124,107,255,0), 0 0 24px var(--p-glow); }
+.tl-step-line {
+  flex: 1; width: 1.5px; min-height: 32px;
+  background: linear-gradient(180deg, rgba(124,107,255,.3), rgba(124,107,255,.06));
+  margin: 6px 0;
 }
-.tl-line {
-  flex: 1; width: 1px;
-  background: linear-gradient(180deg, rgba(124,107,255,.4) 0%, rgba(124,107,255,.1) 100%);
-  margin-top: 4px;
+.tl-item:last-child .tl-step-line { display: none; }
+
+/* ── Content ── */
+.tl-content { flex: 1; padding: 0 0 40px 20px; }
+.tl-item:last-child .tl-content { padding-bottom: 0; }
+
+.tl-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; flex-wrap: wrap;
+  gap: 8px; margin-bottom: 8px; padding-top: 4px;
 }
-.tl-right {
-  padding: 0 0 52px 28px;
+.tl-role {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 19px; font-weight: 800;
+  letter-spacing: -.4px; line-height: 1.2;
 }
 .tl-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 3px 12px; border-radius: 20px;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 11px; border-radius: 20px; flex-shrink: 0;
   font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  margin-bottom: 10px;
 }
 .tl-badge.current { background: rgba(34,211,200,.1); color: var(--c); border: 1px solid rgba(34,211,200,.25); }
 .tl-badge.intern  { background: var(--p-soft); color: var(--p-light); border: 1px solid rgba(124,107,255,.2); }
-.tl-role {
-  font-family: 'Bricolage Grotesque', sans-serif;
-  font-size: 22px; font-weight: 800; letter-spacing: -.5px; margin-bottom: 4px;
+
+.tl-meta {
+  display: flex; flex-wrap: wrap; gap: 6px 16px;
+  margin-bottom: 16px;
 }
-.tl-place { font-size: 13px; color: var(--t2); margin-bottom: 18px; }
-.tl-ul { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.tl-company {
+  font-size: 12.5px; font-weight: 600; color: var(--t2);
+}
+.tl-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--p); letter-spacing: .06em; font-weight: 500;
+}
+
+/* Accordion */
+.tl-toggle {
+  width: 100%; background: none; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-radius: 8px;
+  color: var(--t2); font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--bg2); border: 1px solid var(--border);
+  transition: all .2s; margin-bottom: 0;
+}
+.tl-toggle:hover { border-color: var(--border2); color: var(--text); }
+.tl-toggle-icon {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--p-soft); color: var(--p-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; line-height: 1; flex-shrink: 0;
+  transition: transform .3s, background .2s;
+}
+.tl-item.open .tl-toggle-icon { transform: rotate(45deg); }
+
+.tl-collapse {
+  max-height: 0; overflow: hidden;
+  transition: max-height .45s cubic-bezier(0.4,0,0.2,1);
+}
+.tl-item.open .tl-collapse { max-height: 700px; }
+.tl-collapse-inner { padding: 14px 0 0; display: flex; flex-direction: column; gap: 10px; }
+
+.tl-ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
 .tl-ul li {
   display: flex; gap: 10px; align-items: flex-start;
-  font-size: 13.5px; color: var(--t2); line-height: 1.75;
-  padding: 10px 14px; background: var(--bg2);
-  border: 1px solid var(--border); border-radius: 9px;
+  font-size: 13px; color: var(--t2); line-height: 1.75;
+  padding: 9px 13px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 8px;
   transition: border-color .2s, color .2s;
 }
-.tl-ul li:hover { border-color: var(--border2); color: var(--text); }
+.tl-ul li:hover { border-color: rgba(124,107,255,.25); color: var(--text); }
 .tl-ul li::before { content: '▸'; color: var(--p); font-size: 9px; margin-top: 5px; flex-shrink: 0; }
-.tl-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+
+.tl-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 
 /* ══════════════════════
    PROJECTS/* ══════════════════════
+   EXPERIENCE TIMELINE
+══════════════════════ */
+#experience { background: var(--s1); }
+
+.tl {
+  display: flex; flex-direction: column;
+  gap: 0; position: relative;
+  max-width: 760px;
+}
+
+.tl-item {
+  display: flex; gap: 0;
+  opacity: 0; transform: translateY(18px);
+  transition: opacity .55s ease, transform .55s ease;
+}
+.tl-item.on { opacity: 1; transform: translateY(0); }
+
+/* ── Stepper column ── */
+.tl-step {
+  display: flex; flex-direction: column;
+  align-items: center; width: 48px; flex-shrink: 0;
+}
+.tl-step-num {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-weight: 700; letter-spacing: .04em;
+  border: 1.5px solid var(--border2); background: var(--card);
+  color: var(--t2); transition: all .3s; position: relative; z-index: 2;
+}
+.tl-item.on .tl-step-num {
+  border-color: var(--p); color: var(--p-light);
+  background: var(--p-soft); box-shadow: 0 0 14px var(--p-glow);
+}
+.tl-item:first-child .tl-step-num {
+  border-color: var(--c); color: var(--c);
+  background: var(--c-soft); box-shadow: 0 0 14px rgba(34,211,200,.25);
+}
+.tl-step-line {
+  flex: 1; width: 1.5px; min-height: 32px;
+  background: linear-gradient(180deg, rgba(124,107,255,.3), rgba(124,107,255,.06));
+  margin: 6px 0;
+}
+.tl-item:last-child .tl-step-line { display: none; }
+
+/* ── Content ── */
+.tl-content { flex: 1; padding: 0 0 40px 20px; }
+.tl-item:last-child .tl-content { padding-bottom: 0; }
+
+.tl-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; flex-wrap: wrap;
+  gap: 8px; margin-bottom: 8px; padding-top: 4px;
+}
+.tl-role {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 19px; font-weight: 800;
+  letter-spacing: -.4px; line-height: 1.2;
+}
+.tl-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 11px; border-radius: 20px; flex-shrink: 0;
+  font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+}
+.tl-badge.current { background: rgba(34,211,200,.1); color: var(--c); border: 1px solid rgba(34,211,200,.25); }
+.tl-badge.intern  { background: var(--p-soft); color: var(--p-light); border: 1px solid rgba(124,107,255,.2); }
+
+.tl-meta {
+  display: flex; flex-wrap: wrap; gap: 6px 16px;
+  margin-bottom: 16px;
+}
+.tl-company {
+  font-size: 12.5px; font-weight: 600; color: var(--t2);
+}
+.tl-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--p); letter-spacing: .06em; font-weight: 500;
+}
+
+/* Accordion */
+.tl-toggle {
+  width: 100%; background: none; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-radius: 8px;
+  color: var(--t2); font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--bg2); border: 1px solid var(--border);
+  transition: all .2s; margin-bottom: 0;
+}
+.tl-toggle:hover { border-color: var(--border2); color: var(--text); }
+.tl-toggle-icon {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--p-soft); color: var(--p-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; line-height: 1; flex-shrink: 0;
+  transition: transform .3s, background .2s;
+}
+.tl-item.open .tl-toggle-icon { transform: rotate(45deg); }
+
+.tl-collapse {
+  max-height: 0; overflow: hidden;
+  transition: max-height .45s cubic-bezier(0.4,0,0.2,1);
+}
+.tl-item.open .tl-collapse { max-height: 700px; }
+.tl-collapse-inner { padding: 14px 0 0; display: flex; flex-direction: column; gap: 10px; }
+
+.tl-ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.tl-ul li {
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: 13px; color: var(--t2); line-height: 1.75;
+  padding: 9px 13px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 8px;
+  transition: border-color .2s, color .2s;
+}
+.tl-ul li:hover { border-color: rgba(124,107,255,.25); color: var(--text); }
+.tl-ul li::before { content: '▸'; color: var(--p); font-size: 9px; margin-top: 5px; flex-shrink: 0; }
+
+.tl-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ══════════════════════
+   PROJECTS/* ══════════════════════
+   EXPERIENCE TIMELINE
+══════════════════════ */
+#experience { background: var(--s1); }
+
+.tl {
+  display: flex; flex-direction: column;
+  gap: 0; position: relative;
+  max-width: 760px;
+}
+
+.tl-item {
+  display: flex; gap: 0;
+  opacity: 0; transform: translateY(18px);
+  transition: opacity .55s ease, transform .55s ease;
+}
+.tl-item.on { opacity: 1; transform: translateY(0); }
+
+/* ── Stepper column ── */
+.tl-step {
+  display: flex; flex-direction: column;
+  align-items: center; width: 48px; flex-shrink: 0;
+}
+.tl-step-num {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-weight: 700; letter-spacing: .04em;
+  border: 1.5px solid var(--border2); background: var(--card);
+  color: var(--t2); transition: all .3s; position: relative; z-index: 2;
+}
+.tl-item.on .tl-step-num {
+  border-color: var(--p); color: var(--p-light);
+  background: var(--p-soft); box-shadow: 0 0 14px var(--p-glow);
+}
+.tl-item:first-child .tl-step-num {
+  border-color: var(--c); color: var(--c);
+  background: var(--c-soft); box-shadow: 0 0 14px rgba(34,211,200,.25);
+}
+.tl-step-line {
+  flex: 1; width: 1.5px; min-height: 32px;
+  background: linear-gradient(180deg, rgba(124,107,255,.3), rgba(124,107,255,.06));
+  margin: 6px 0;
+}
+.tl-item:last-child .tl-step-line { display: none; }
+
+/* ── Content ── */
+.tl-content { flex: 1; padding: 0 0 40px 20px; }
+.tl-item:last-child .tl-content { padding-bottom: 0; }
+
+.tl-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; flex-wrap: wrap;
+  gap: 8px; margin-bottom: 8px; padding-top: 4px;
+}
+.tl-role {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 19px; font-weight: 800;
+  letter-spacing: -.4px; line-height: 1.2;
+}
+.tl-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 11px; border-radius: 20px; flex-shrink: 0;
+  font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+}
+.tl-badge.current { background: rgba(34,211,200,.1); color: var(--c); border: 1px solid rgba(34,211,200,.25); }
+.tl-badge.intern  { background: var(--p-soft); color: var(--p-light); border: 1px solid rgba(124,107,255,.2); }
+
+.tl-meta {
+  display: flex; flex-wrap: wrap; gap: 6px 16px;
+  margin-bottom: 16px;
+}
+.tl-company {
+  font-size: 12.5px; font-weight: 600; color: var(--t2);
+}
+.tl-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--p); letter-spacing: .06em; font-weight: 500;
+}
+
+/* Accordion */
+.tl-toggle {
+  width: 100%; background: none; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-radius: 8px;
+  color: var(--t2); font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--bg2); border: 1px solid var(--border);
+  transition: all .2s; margin-bottom: 0;
+}
+.tl-toggle:hover { border-color: var(--border2); color: var(--text); }
+.tl-toggle-icon {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--p-soft); color: var(--p-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; line-height: 1; flex-shrink: 0;
+  transition: transform .3s, background .2s;
+}
+.tl-item.open .tl-toggle-icon { transform: rotate(45deg); }
+
+.tl-collapse {
+  max-height: 0; overflow: hidden;
+  transition: max-height .45s cubic-bezier(0.4,0,0.2,1);
+}
+.tl-item.open .tl-collapse { max-height: 700px; }
+.tl-collapse-inner { padding: 14px 0 0; display: flex; flex-direction: column; gap: 10px; }
+
+.tl-ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.tl-ul li {
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: 13px; color: var(--t2); line-height: 1.75;
+  padding: 9px 13px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 8px;
+  transition: border-color .2s, color .2s;
+}
+.tl-ul li:hover { border-color: rgba(124,107,255,.25); color: var(--text); }
+.tl-ul li::before { content: '▸'; color: var(--p); font-size: 9px; margin-top: 5px; flex-shrink: 0; }
+
+.tl-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ══════════════════════
+   PROJECTS/* ══════════════════════
+   EXPERIENCE TIMELINE
+══════════════════════ */
+#experience { background: var(--s1); }
+
+.tl {
+  display: flex; flex-direction: column;
+  gap: 0; position: relative;
+  max-width: 760px;
+}
+
+.tl-item {
+  display: flex; gap: 0;
+  opacity: 0; transform: translateY(18px);
+  transition: opacity .55s ease, transform .55s ease;
+}
+.tl-item.on { opacity: 1; transform: translateY(0); }
+
+/* ── Stepper column ── */
+.tl-step {
+  display: flex; flex-direction: column;
+  align-items: center; width: 48px; flex-shrink: 0;
+}
+.tl-step-num {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-weight: 700; letter-spacing: .04em;
+  border: 1.5px solid var(--border2); background: var(--card);
+  color: var(--t2); transition: all .3s; position: relative; z-index: 2;
+}
+.tl-item.on .tl-step-num {
+  border-color: var(--p); color: var(--p-light);
+  background: var(--p-soft); box-shadow: 0 0 14px var(--p-glow);
+}
+.tl-item:first-child .tl-step-num {
+  border-color: var(--c); color: var(--c);
+  background: var(--c-soft); box-shadow: 0 0 14px rgba(34,211,200,.25);
+}
+.tl-step-line {
+  flex: 1; width: 1.5px; min-height: 32px;
+  background: linear-gradient(180deg, rgba(124,107,255,.3), rgba(124,107,255,.06));
+  margin: 6px 0;
+}
+.tl-item:last-child .tl-step-line { display: none; }
+
+/* ── Content ── */
+.tl-content { flex: 1; padding: 0 0 40px 20px; }
+.tl-item:last-child .tl-content { padding-bottom: 0; }
+
+.tl-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; flex-wrap: wrap;
+  gap: 8px; margin-bottom: 8px; padding-top: 4px;
+}
+.tl-role {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 19px; font-weight: 800;
+  letter-spacing: -.4px; line-height: 1.2;
+}
+.tl-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 11px; border-radius: 20px; flex-shrink: 0;
+  font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+}
+.tl-badge.current { background: rgba(34,211,200,.1); color: var(--c); border: 1px solid rgba(34,211,200,.25); }
+.tl-badge.intern  { background: var(--p-soft); color: var(--p-light); border: 1px solid rgba(124,107,255,.2); }
+
+.tl-meta {
+  display: flex; flex-wrap: wrap; gap: 6px 16px;
+  margin-bottom: 16px;
+}
+.tl-company {
+  font-size: 12.5px; font-weight: 600; color: var(--t2);
+}
+.tl-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--p); letter-spacing: .06em; font-weight: 500;
+}
+
+/* Accordion */
+.tl-toggle {
+  width: 100%; background: none; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-radius: 8px;
+  color: var(--t2); font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--bg2); border: 1px solid var(--border);
+  transition: all .2s; margin-bottom: 0;
+}
+.tl-toggle:hover { border-color: var(--border2); color: var(--text); }
+.tl-toggle-icon {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--p-soft); color: var(--p-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; line-height: 1; flex-shrink: 0;
+  transition: transform .3s, background .2s;
+}
+.tl-item.open .tl-toggle-icon { transform: rotate(45deg); }
+
+.tl-collapse {
+  max-height: 0; overflow: hidden;
+  transition: max-height .45s cubic-bezier(0.4,0,0.2,1);
+}
+.tl-item.open .tl-collapse { max-height: 700px; }
+.tl-collapse-inner { padding: 14px 0 0; display: flex; flex-direction: column; gap: 10px; }
+
+.tl-ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.tl-ul li {
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: 13px; color: var(--t2); line-height: 1.75;
+  padding: 9px 13px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 8px;
+  transition: border-color .2s, color .2s;
+}
+.tl-ul li:hover { border-color: rgba(124,107,255,.25); color: var(--text); }
+.tl-ul li::before { content: '▸'; color: var(--p); font-size: 9px; margin-top: 5px; flex-shrink: 0; }
+
+.tl-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ══════════════════════
    PROJECTS
 ══════════════════════ */
 .proj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px,1fr)); gap: 20px; }
@@ -563,7 +1022,7 @@ footer {
 ══════════════════════ */
 @media(max-width:900px){
   body{cursor:auto}
-  #cur,#cur-ring{display:none}
+  #cur-wrap{display:none}
   #hero{grid-template-columns:1fr;padding:110px 24px 80px}
   #hero-full{display:block}
   
@@ -581,6 +1040,13 @@ footer {
 <body>
 
 <!-- LOADER -->
+<!-- CURSOR -->
+<div id="cur-wrap">
+  <div id="cur-outer"></div>
+  <div id="cur-inner"></div>
+  <div id="cur-trail"></div>
+</div>
+
 <div id="loader">
   <div class="ldr-logo">SS.</div>
   <div class="ldr-sub">// initializing portfolio</div>
@@ -588,7 +1054,8 @@ footer {
 </div>
 
 <!-- CURSOR -->
-<div id="cur"></div><div id="cur-ring"></div>
+
+
 
 <!-- PROGRESS -->
 <div id="sprog"></div>
@@ -747,85 +1214,116 @@ footer {
     <h2 class="rv d1">Career <span class="dim">Timeline.</span></h2>
     <div class="tl">
 
-      <div class="tl-item rv d1">
-        <div class="tl-left">
-          <div class="tl-date">June 2024 – Present</div>
-          <div class="tl-company">Mograsys Technologies</div>
+      <!-- 01 -->
+      <div class="tl-item rv" id="tl0">
+        <div class="tl-step">
+          <div class="tl-step-num">01</div>
+          <div class="tl-step-line"></div>
         </div>
-        <div class="tl-center">
-          <div class="tl-dot tl-dot-active"></div>
-          <div class="tl-line"></div>
-        </div>
-        <div class="tl-right">
-          <div class="tl-badge current">● Current</div>
-          <div class="tl-role">Software Engineer — SQL</div>
-          <div class="tl-place">Mograsys Technologies Ltd., Margao · Full-time</div>
-          <ul class="tl-ul">
-            <li>Designed scalable SQL-based data models and ETL pipelines for the mograERP platform.</li>
-            <li>Built and optimized ETL pipelines loading data from OLTP systems with full accuracy validation.</li>
-            <li>Implemented data quality checks, auditing mechanisms and control table logic.</li>
-            <li>Automated data workflows via SQL Server Jobs, reducing manual processing overhead.</li>
-            <li>Prepared analytics-ready datasets enabling dashboards and self-serve reporting.</li>
-          </ul>
-          <div class="tl-tags">
-            <span class="tag tag-p">MS SQL Server</span>
-            <span class="tag tag-p">T-SQL</span>
-            <span class="tag tag-c">ETL</span>
-            <span class="tag tag-c">Data Modelling</span>
-            <span class="tag tag-a">SQL Server Jobs</span>
+        <div class="tl-content">
+          <div class="tl-header">
+            <div class="tl-role">Software Engineer — SQL</div>
+            <div class="tl-badge current">● Current</div>
+          </div>
+          <div class="tl-meta">
+            <span class="tl-company">Mograsys Technologies Ltd., Margao</span>
+            <span class="tl-date">June 2024 – Present</span>
+          </div>
+          <button class="tl-toggle" onclick="toggleTl('tl0')">
+            View Responsibilities
+            <span class="tl-toggle-icon">+</span>
+          </button>
+          <div class="tl-collapse">
+            <div class="tl-collapse-inner">
+              <ul class="tl-ul">
+                <li>Designed scalable SQL-based data models and ETL pipelines for the mograERP platform.</li>
+                <li>Built and optimized ETL pipelines loading data from OLTP systems with full accuracy validation.</li>
+                <li>Implemented data quality checks, auditing mechanisms and control table logic.</li>
+                <li>Automated data workflows via SQL Server Jobs, reducing manual processing overhead.</li>
+                <li>Prepared analytics-ready datasets enabling dashboards and self-serve reporting.</li>
+              </ul>
+              <div class="tl-tags">
+                <span class="tag tag-p">MS SQL Server</span>
+                <span class="tag tag-p">T-SQL</span>
+                <span class="tag tag-c">ETL</span>
+                <span class="tag tag-c">Data Modelling</span>
+                <span class="tag tag-a">SQL Server Jobs</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="tl-item rv d2">
-        <div class="tl-left">
-          <div class="tl-date">Dec 2023 – June 2024</div>
-          <div class="tl-company">Mograsys Technologies</div>
+      <!-- 02 -->
+      <div class="tl-item rv" id="tl1">
+        <div class="tl-step">
+          <div class="tl-step-num">02</div>
+          <div class="tl-step-line"></div>
         </div>
-        <div class="tl-center">
-          <div class="tl-dot"></div>
-          <div class="tl-line"></div>
-        </div>
-        <div class="tl-right">
-          <div class="tl-badge intern">Internship</div>
-          <div class="tl-role">Intern Software Developer</div>
-          <div class="tl-place">Mograsys Technologies Ltd., Margao</div>
-          <ul class="tl-ul">
-            <li>Contributed across SQL, Angular, and Jenkins on backend and frontend tasks.</li>
-            <li>Built responsive CSS-based UI components ensuring cross-device compatibility.</li>
-            <li>Gained hands-on experience with CI/CD pipelines and agile workflows.</li>
-          </ul>
-          <div class="tl-tags">
-            <span class="tag tag-p">SQL</span>
-            <span class="tag tag-r">Angular</span>
-            <span class="tag tag-c">Jenkins</span>
-            <span class="tag tag-r">CSS</span>
+        <div class="tl-content">
+          <div class="tl-header">
+            <div class="tl-role">Intern Software Developer</div>
+            <div class="tl-badge intern">Internship</div>
+          </div>
+          <div class="tl-meta">
+            <span class="tl-company">Mograsys Technologies Ltd., Margao</span>
+            <span class="tl-date">Dec 2023 – June 2024</span>
+          </div>
+          <button class="tl-toggle" onclick="toggleTl('tl1')">
+            View Responsibilities
+            <span class="tl-toggle-icon">+</span>
+          </button>
+          <div class="tl-collapse">
+            <div class="tl-collapse-inner">
+              <ul class="tl-ul">
+                <li>Contributed across SQL, Angular, and Jenkins on backend and frontend tasks.</li>
+                <li>Built responsive CSS-based UI components ensuring cross-device compatibility.</li>
+                <li>Gained hands-on experience with CI/CD pipelines and agile workflows.</li>
+              </ul>
+              <div class="tl-tags">
+                <span class="tag tag-p">SQL</span>
+                <span class="tag tag-r">Angular</span>
+                <span class="tag tag-c">Jenkins</span>
+                <span class="tag tag-r">CSS</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="tl-item rv d3">
-        <div class="tl-left">
-          <div class="tl-date">Aug – Oct 2022</div>
-          <div class="tl-company">Onstro</div>
+      <!-- 03 -->
+      <div class="tl-item rv" id="tl2">
+        <div class="tl-step">
+          <div class="tl-step-num">03</div>
+          <div class="tl-step-line"></div>
         </div>
-        <div class="tl-center">
-          <div class="tl-dot"></div>
-        </div>
-        <div class="tl-right">
-          <div class="tl-badge intern">Internship</div>
-          <div class="tl-role">Intern Frontend Developer</div>
-          <div class="tl-place">Onstro, Verna Goa</div>
-          <ul class="tl-ul">
-            <li>Built FOODWISE — recipe-finding app where users discover recipes from available ingredients.</li>
-            <li>Built HUBSTAFF — employee time tracker that auto-generates salary slips from work hours.</li>
-            <li>Served as both Frontend Developer and UI/UX Designer, creating wireframes and responsive UI.</li>
-          </ul>
-          <div class="tl-tags">
-            <span class="tag tag-r">HTML5</span>
-            <span class="tag tag-r">CSS3</span>
-            <span class="tag tag-a">JavaScript</span>
-            <span class="tag tag-r">Figma</span>
+        <div class="tl-content">
+          <div class="tl-header">
+            <div class="tl-role">Intern Frontend Developer</div>
+            <div class="tl-badge intern">Internship</div>
+          </div>
+          <div class="tl-meta">
+            <span class="tl-company">Onstro, Verna Goa</span>
+            <span class="tl-date">Aug – Oct 2022</span>
+          </div>
+          <button class="tl-toggle" onclick="toggleTl('tl2')">
+            View Responsibilities
+            <span class="tl-toggle-icon">+</span>
+          </button>
+          <div class="tl-collapse">
+            <div class="tl-collapse-inner">
+              <ul class="tl-ul">
+                <li>Built FOODWISE — recipe-finding app where users discover recipes from available ingredients.</li>
+                <li>Built HUBSTAFF — employee time tracker that auto-generates salary slips from work hours.</li>
+                <li>Served as both Frontend Developer and UI/UX Designer — wireframes and responsive UI.</li>
+              </ul>
+              <div class="tl-tags">
+                <span class="tag tag-r">HTML5</span>
+                <span class="tag tag-r">CSS3</span>
+                <span class="tag tag-a">JavaScript</span>
+                <span class="tag tag-r">Figma</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -834,7 +1332,7 @@ footer {
   </div>
 </section>
 
-<!-- PROJECTS --><!-- PROJECTS -->
+<!-- PROJECTS<!-- PROJECTS<!-- PROJECTS<!-- PROJECTS<!-- PROJECTS --><!-- PROJECTS -->
 <section id="projects">
   <div class="si">
     <div class="sl rv">projects</div>
@@ -958,14 +1456,40 @@ footer {
 /* LOADER */
 window.addEventListener('load', () => setTimeout(() => document.getElementById('loader').classList.add('hide'), 1700));
 
+
 /* CURSOR */
-const cur = document.getElementById('cur'), ring = document.getElementById('cur-ring');
-let mx=0,my=0,rx=0,ry=0;
-document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
-(function tick(){ rx+=(mx-rx)*.15; ry+=(my-ry)*.15;
-  cur.style.cssText=`left:${mx}px;top:${my}px`;
-  ring.style.cssText=`left:${rx}px;top:${ry}px`;
-  requestAnimationFrame(tick);})();
+(function() {
+  const outer = document.getElementById('cur-outer');
+  const inner = document.getElementById('cur-inner');
+  const trail = document.getElementById('cur-trail');
+  if (!outer) return;
+
+  let mx=0, my=0;       // mouse position
+  let ox=0, oy=0;       // outer position
+  let tx2=0, ty2=0;     // trail position
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    // Inner snaps immediately
+    inner.style.left = mx + 'px';
+    inner.style.top  = my + 'px';
+  });
+
+  // Click burst
+  document.addEventListener('mousedown', () => outer.classList.add('clicked'));
+  document.addEventListener('mouseup',   () => outer.classList.remove('clicked'));
+
+  // Animate outer + trail with different lag
+  (function animate() {
+    ox  += (mx - ox)  * 0.12;
+    oy  += (my - oy)  * 0.12;
+    tx2 += (mx - tx2) * 0.06;
+    ty2 += (my - ty2) * 0.06;
+    outer.style.left = ox  + 'px'; outer.style.top = oy  + 'px';
+    trail.style.left = tx2 + 'px'; trail.style.top = ty2 + 'px';
+    requestAnimationFrame(animate);
+  })();
+})();
 
 /* PROGRESS */
 const sp = document.getElementById('sprog');
@@ -1031,9 +1555,9 @@ function drawP(){
 drawP();
 
 /* REVEAL */
-const rvEls = document.querySelectorAll('.rv, .rv-l');
+const rvEls = document.querySelectorAll('.rv, .rv-l, .tl-item');
 const ro = new IntersectionObserver(entries => {
-  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('on'); ro.unobserve(e.target); }});
+  entries.forEach((e,i) => { if(e.isIntersecting){ setTimeout(()=>e.target.classList.add('on'), i*80); ro.unobserve(e.target); }});
 }, { threshold: .1 });
 rvEls.forEach(el => ro.observe(el));
 
@@ -1058,6 +1582,20 @@ document.querySelectorAll('.sk,.proj').forEach(c => {
     c.style.setProperty('--mx', ((e.clientX-r.left)/r.width*100)+'%');
     c.style.setProperty('--my', ((e.clientY-r.top)/r.height*100)+'%');
   });
+});
+
+/* TIMELINE ACCORDION */
+function toggleTl(id) {
+  const el = document.getElementById(id);
+  const wasOpen = el.classList.contains('open');
+  document.querySelectorAll('.tl-item').forEach(i => i.classList.remove('open'));
+  if (!wasOpen) el.classList.add('open');
+}
+// Open first by default
+// open first timeline item
+window.addEventListener('load', () => {
+  const first = document.getElementById('tl0');
+  if(first) first.classList.add('open');
 });
 
 /* 3D TILT on projects */
