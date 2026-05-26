@@ -54,4 +54,3 @@ This is my personal portfolio website showcasing my skills, experience, and proj
 
 ---
 
-## 📁 Project Structure
