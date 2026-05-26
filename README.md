@@ -2,7 +2,7 @@
 
 A modern, interactive personal portfolio website built with pure HTML, CSS, and Vanilla JavaScript.
 
-Live at 👉 https://the-sabnis.github.io/portfolio
+Live at 👉 https://the-sabnis.github.io/My-Portfolio/
 
 ---
 
